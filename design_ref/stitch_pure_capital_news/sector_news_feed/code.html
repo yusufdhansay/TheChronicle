@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Investing Sector - It Is What It Is</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@400;500;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#7285a4",
+                    "on-surface-variant": "#444748",
+                    "secondary-fixed": "#ffdad4",
+                    "outline": "#747878",
+                    "surface-variant": "#e6e2dc",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#000000",
+                    "primary-container": "#1c1b1b",
+                    "secondary": "#ad3221",
+                    "on-primary-container": "#858383",
+                    "surface-tint": "#5f5e5e",
+                    "tertiary-container": "#061c36",
+                    "inverse-surface": "#32302c",
+                    "surface": "#fef9f2",
+                    "inverse-on-surface": "#f5f0ea",
+                    "on-background": "#1d1b18",
+                    "on-secondary-fixed": "#400200",
+                    "secondary-container": "#ff6d56",
+                    "outline-variant": "#c4c7c7",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#c8c6c5",
+                    "on-secondary-container": "#6c0500",
+                    "on-error": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e6e2dc",
+                    "on-tertiary-fixed-variant": "#354863",
+                    "on-surface": "#1d1b18",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#000000",
+                    "surface-dim": "#ded9d3",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#e5e2e1",
+                    "tertiary-fixed": "#d4e3ff",
+                    "on-primary-fixed-variant": "#474746",
+                    "surface-container-high": "#ece7e1",
+                    "surface-bright": "#fef9f2",
+                    "on-tertiary-fixed": "#061c36",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "tertiary-fixed-dim": "#b4c8e9",
+                    "on-secondary-fixed-variant": "#8b190b",
+                    "secondary-fixed-dim": "#ffb4a7",
+                    "on-primary-fixed": "#1c1b1b",
+                    "background": "#fef9f2",
+                    "error-container": "#ffdad6",
+                    "surface-container": "#f2ede7",
+                    "surface-container-low": "#f8f3ed"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0rem",
+                    "lg": "0rem",
+                    "xl": "0rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "column-count": "12",
+                    "max-width": "1200px",
+                    "margin-desktop": "64px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "meta-sm": ["\"Source Serif 4\""],
+                    "label-caps": ["Inter"],
+                    "headline-lg": ["Playfair Display"],
+                    "headline-md": ["Playfair Display"],
+                    "headline-lg-mobile": ["Playfair Display"],
+                    "body-md": ["\"Source Serif 4\""],
+                    "body-lg": ["\"Source Serif 4\""],
+                    "display-lg": ["Playfair Display"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "meta-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-lg": ["40px", {"lineHeight": "48px", "fontWeight": "700"}],
+                    "headline-md": ["28px", {"lineHeight": "34px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "38px", "fontWeight": "700"}],
+                    "body-md": ["17px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-lg": ["20px", {"lineHeight": "32px", "fontWeight": "400"}],
+                    "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fef9f2;
+            -webkit-font-smoothing: antialiased;
+        }
+        .hairline-y { border-left-width: 0.5px; border-right-width: 0.5px; }
+        .hairline-t { border-top-width: 0.5px; }
+        .hairline-b { border-bottom-width: 0.5px; }
+    </style>
+</head>
+<body class="font-body-md text-on-background selection:bg-secondary selection:text-white">
+<!-- TopNavBar Execution -->
+<header class="w-full bg-surface border-b border-primary/20">
+<div class="flex flex-col items-center w-full px-6 md:px-margin-desktop py-8 max-w-max-width mx-auto">
+<div class="w-full flex justify-between items-center mb-6">
+<div class="hidden md:flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">menu</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Tuesday, May 14, 2024</span>
+</div>
+<h1 class="text-display-lg font-display-lg text-primary uppercase tracking-tight leading-none text-center">It Is What It Is</h1>
+<div class="flex items-center gap-6">
+<button class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors">Sign In</button>
+<button class="bg-primary text-white px-4 py-2 font-label-caps text-label-caps uppercase transition-opacity hover:opacity-80">Subscribe</button>
+</div>
+</div>
+<nav class="w-full border-t border-b border-primary/20 py-3 flex justify-center gap-8 overflow-x-auto no-scrollbar">
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors" href="#">Markets</a>
+<a class="font-label-caps text-label-caps uppercase text-primary border-b-2 border-secondary pb-1" href="#">Investing</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors" href="#">Tech</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors" href="#">Economy</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors" href="#">Business</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-primary transition-colors" href="#">AI</a>
+</nav>
+</div>
+</header>
+<main class="max-w-max-width mx-auto px-6 md:px-margin-desktop py-12">
+<!-- Sector Header -->
+<div class="mb-12">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-3 h-3 bg-secondary"></span>
+<h2 class="font-label-caps text-label-caps uppercase text-secondary tracking-widest">Sector Focus</h2>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-primary mb-4">Investing &amp; Wealth Management</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">A curated feed of capital markets, equity research, and long-term asset allocation strategies for the quiet reader.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Main News Feed (8 cols) -->
+<div class="md:col-span-8 space-y-12">
+<!-- Story Item 1 -->
+<article class="group">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-1">
+<img class="w-full aspect-[4/3] object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-500" data-alt="A professional, high-contrast black and white photograph of a modernist stock exchange floor with traders in sharp suits and glowing digital displays. The atmosphere is focused and quiet, echoing the brand's editorial minimalism. Soft overhead lighting creates long shadows on the polished floors, emphasizing a sense of order and high finance authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsE71yVhQOw4tGlV_dzybBui011ENshZ5Zzx-gEdRiCCGkhpkvWSwMLr7eTWjDXotBiHIUc_cD8JzKUsGpWi1k-TuJlfC2M6_m-gUhJcu2DrWLJvQ0pUoLFmnHqlmc6jmsNn2lmxN1vUE8qMc2936HkGaQF5D3qZ-1LFzBCG5qj7ze88pgiYBkrZU167043riOX1kH089vNfKIPINLvdzEKFViXsFDSbqIxH3vRyGQYsIAa5OelF9jKy0aOzL0Z6AaOkS4mkATuSbh"/>
+</div>
+<div class="md:col-span-2">
+<div class="flex items-center gap-3 mb-2">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Analysis</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<time class="font-label-caps text-[10px] uppercase text-outline">14 MIN AGO</time>
+</div>
+<h4 class="font-headline-md text-headline-md text-primary group-hover:text-secondary transition-colors cursor-pointer mb-3">The Quiet Accumulation: Why Large Cap value is stealthily outperforming</h4>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-4">While the headlines focus on volatile tech surges, institutional capital is flowing into boring, cash-flow positive enterprises. We examine the structural shift back to fundamental analysis in an era of high interest rates.</p>
+<div class="font-meta-sm text-meta-sm text-primary">By <span class="underline underline-offset-4 decoration-outline-variant">Eleanor Haight</span></div>
+</div>
+</div>
+<div class="hairline-t border-primary/10 mt-12"></div>
+</article>
+<!-- Story Item 2 -->
+<article class="group">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-1">
+<img class="w-full aspect-[4/3] object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-500" data-alt="A minimalist overhead shot of a clean wooden desk containing a high-end fountain pen, a glass of water, and several stacks of crisp financial newspapers. The lighting is bright and natural from a side window, creating a serene workspace environment. The palette is dominated by creams, blacks, and subtle wood tones, fitting the publication's aesthetic of calm intellectual inquiry." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRJnH1kbrSZIV8uNX0FB5m3JNE2J0Mlr7tyJ1_1vikLsplE16WGJk-AqaQGtdaOR_vaeWxgdmRj3vJrfboz54pzQ0SlyLHJzjfzdSWxpWIFX-vdaV9_suwSyzbiAAfzVnce-c36o_5HwH25q4DXTYufurpJTiRV4mXtJg4ZUdjw8zgLf6WCkXlvRK9wAMnYDfGxDXTp702OLNp-_8SNkCNpWVjr2zEi83Km0laAjKepCm14NLjdng2B3Y6L6I_VHnem7Ik_ArrlLR_"/>
+</div>
+<div class="md:col-span-2">
+<div class="flex items-center gap-3 mb-2">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Markets</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<time class="font-label-caps text-[10px] uppercase text-outline">2 HOURS AGO</time>
+</div>
+<h4 class="font-headline-md text-headline-md text-primary group-hover:text-secondary transition-colors cursor-pointer mb-3">Central Banks reach the plateau: What a 'Pause' means for your bond portfolio</h4>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-4">As the Fed signals a temporary halt to aggressive rate hikes, the fixed-income landscape is shifting. We explore why long-dated treasuries are becoming the anchor of choice for the next decade.</p>
+<div class="font-meta-sm text-meta-sm text-primary">By <span class="underline underline-offset-4 decoration-outline-variant">Julian Vance</span></div>
+</div>
+</div>
+<div class="hairline-t border-primary/10 mt-12"></div>
+</article>
+<!-- Story Item 3 -->
+<article class="group">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-1">
+<img class="w-full aspect-[4/3] object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-500" data-alt="An abstract, macro photograph of intricate clockwork gears made of brushed steel and gold, symbolizing the precise mechanism of the global economy. The background is dark and out of focus, highlighting the sharp edges and mechanical complexity of the central gears. The lighting is dramatic and low-key, emphasizing structural depth and reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhIMtRIJHpyVoA0Qz1pLeekeA9kt3YgJd6XjlwwULiO_-gtpMpiWLQRL1aX2-FrOrCm6ycYrsbpNryWjoyvnAVCAt2os72iUbsaXdZW_x0-YIiso-XIsbJayGewclp0r5l7c9217O9UY0PwG1QGKih7eWMJUBuwKVZ3-PKpwIfcl9P1yXHJCr7KlTy042DII3UPRp_1wcQz7fi8ZC8SgUf05iJdtNmixpnmJ-zJwZi2OlX1t3Ra--bLSXxCXftwvgGRmi2fMLF03KR"/>
+</div>
+<div class="md:col-span-2">
+<div class="flex items-center gap-3 mb-2">
+<span class="font-label-caps text-[10px] uppercase text-secondary">Opinion</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<time class="font-label-caps text-[10px] uppercase text-outline">5 HOURS AGO</time>
+</div>
+<h4 class="font-headline-md text-headline-md text-primary group-hover:text-secondary transition-colors cursor-pointer mb-3">The Fallacy of the 60/40 Portfolio in the Age of Scarcity</h4>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3 mb-4">Traditional allocation models are failing to account for persistent supply-side constraints. Rethinking diversification through the lens of tangible assets and private equity.</p>
+<div class="font-meta-sm text-meta-sm text-primary">By <span class="underline underline-offset-4 decoration-outline-variant">Sarah Thorne</span></div>
+</div>
+</div>
+<div class="hairline-t border-primary/10 mt-12"></div>
+</article>
+<div class="flex justify-center pt-8">
+<button class="font-label-caps text-label-caps uppercase py-3 px-8 border border-primary hover:bg-primary hover:text-white transition-all">Load More Stories</button>
+</div>
+</div>
+<!-- Sidebar (4 cols) -->
+<aside class="md:col-span-4 md:pl-8 md:border-l md:border-primary/10">
+<!-- Market Pulse Widget -->
+<section class="mb-12">
+<h5 class="font-label-caps text-label-caps uppercase text-primary border-b border-primary mb-6 pb-2">Market Pulse</h5>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-primary/5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">S&amp;P 500</span>
+<span class="font-label-caps text-label-caps text-green-700">+0.42%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-primary/5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">NASDAQ</span>
+<span class="font-label-caps text-label-caps text-secondary">-0.12%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-primary/5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">10Y TREASURY</span>
+<span class="font-label-caps text-label-caps text-primary">4.21%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-primary/5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">GOLD</span>
+<span class="font-label-caps text-label-caps text-green-700">+$12.40</span>
+</div>
+</div>
+</section>
+<!-- Trending In Investing -->
+<section class="mb-12">
+<h5 class="font-label-caps text-label-caps uppercase text-primary border-b border-primary mb-6 pb-2">Trending In Sector</h5>
+<div class="space-y-8">
+<div class="group cursor-pointer">
+<span class="text-display-lg font-display-lg text-surface-variant absolute -translate-x-6 -translate-y-4 pointer-events-none group-hover:text-primary/10 transition-colors">1</span>
+<h6 class="font-headline-md text-[18px] text-primary relative z-10 leading-snug group-hover:text-secondary transition-colors">Why ESG is being rebranded but not retired by major asset managers.</h6>
+</div>
+<div class="group cursor-pointer">
+<span class="text-display-lg font-display-lg text-surface-variant absolute -translate-x-6 -translate-y-4 pointer-events-none group-hover:text-primary/10 transition-colors">2</span>
+<h6 class="font-headline-md text-[18px] text-primary relative z-10 leading-snug group-hover:text-secondary transition-colors">The surprising resiliency of European mid-caps in a slowing economy.</h6>
+</div>
+<div class="group cursor-pointer">
+<span class="text-display-lg font-display-lg text-surface-variant absolute -translate-x-6 -translate-y-4 pointer-events-none group-hover:text-primary/10 transition-colors">3</span>
+<h6 class="font-headline-md text-[18px] text-primary relative z-10 leading-snug group-hover:text-secondary transition-colors">Venture Capital's return to sobriety: Lessons from the latest funding rounds.</h6>
+</div>
+</div>
+</section>
+<!-- Newsletter Callout -->
+<section class="bg-primary p-8 text-white">
+<h5 class="font-label-caps text-label-caps uppercase mb-4">The Quiet Reader</h5>
+<p class="font-body-md text-meta-sm mb-6 opacity-80">Our weekly digest of market deep-dives, delivered without the noise.</p>
+<input class="w-full bg-transparent border-b border-white/30 text-white placeholder:text-white/40 focus:border-white focus:ring-0 px-0 py-2 mb-4" placeholder="Email address" type="email"/>
+<button class="w-full bg-white text-primary font-label-caps text-label-caps uppercase py-3 hover:opacity-90 transition-opacity">Subscribe</button>
+</section>
+</aside>
+</div>
+</main>
+<!-- Footer Execution -->
+<footer class="w-full bg-surface border-t border-primary/20 mt-12">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-6 md:px-margin-desktop py-12 max-w-max-width mx-auto">
+<div class="mb-8 md:mb-0 text-center md:text-left">
+<div class="font-headline-md text-headline-md text-primary mb-2">It Is What It Is.</div>
+<p class="font-meta-sm text-meta-sm text-on-surface-variant max-w-xs">© 2024 It Is What It Is. A Daily Paper for One Quiet Reader.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">About</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">Archive</a>
+<a class="font-label-caps text-label-caps uppercase text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for load more button
+        const loadMoreBtn = document.querySelector('button:contains("Load More")');
+        if(loadMoreBtn) {
+            loadMoreBtn.addEventListener('mousedown', () => {
+                loadMoreBtn.style.opacity = '0.7';
+            });
+            loadMoreBtn.addEventListener('mouseup', () => {
+                loadMoreBtn.style.opacity = '1';
+            });
+        }
+    </script>
+</body></html>

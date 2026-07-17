@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paper & Capital palette */
+  --color-surface: #fef9f2;
+  --color-surface-dim: #ded9d3;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8f3ed;
+  --color-surface-container: #f2ede7;
+  --color-surface-container-high: #ece7e1;
+  --color-surface-container-highest: #e6e2dc;
+  --color-on-surface: #1d1b18;
+  --color-on-surface-variant: #444748;
+  --color-inverse-surface: #32302c;
+  --color-inverse-on-surface: #f5f0ea;
+  --color-outline: #747878;
+  --color-outline-variant: #c4c7c7;
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-secondary: #ad3221;
+  --color-on-secondary: #ffffff;
+  --color-tertiary-container: #061c36;
+  --color-on-tertiary-container: #7285a4;
+  --color-gain: #1a7f37;
+  --color-loss: #ad3221;
+
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  --radius: 0px;
+}
+
+html {
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+body {
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sharp corners everywhere — the design forbids rounding */
+* {
+  border-radius: 0 !important;
+}
+
+.label-caps {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hairline {
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+/* Continuous marquee for the market ticker: three identical rows are
+   rendered, so shifting by exactly one row width loops seamlessly. */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% / 3));
+  }
+}
+
+/* ── Article view ── */
+.article-drop-cap {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 84px;
+  line-height: 64px;
+  margin-right: 1rem;
+  margin-top: 0.5rem;
+  font-weight: 700;
+}
+
+/* Staggered fade-in for article sections */
+.article-fade-in > * {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: article-reveal 0.6s ease-out forwards;
+}
+.article-fade-in > *:nth-child(1) { animation-delay: 0ms; }
+.article-fade-in > *:nth-child(2) { animation-delay: 100ms; }
+.article-fade-in > *:nth-child(3) { animation-delay: 200ms; }
+.article-fade-in > *:nth-child(4) { animation-delay: 300ms; }
+.article-fade-in > *:nth-child(5) { animation-delay: 400ms; }
+
+@keyframes article-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
