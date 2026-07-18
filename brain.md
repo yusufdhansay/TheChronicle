@@ -34,6 +34,7 @@ graph TD
 /
 ├── data/                       # Local file system storage (JSON databases)
 │   ├── archive/                # Historical IST day snapshots (YYYY-MM-DD.json)
+│   ├── summaries.json          # Cached 100-word article briefs (keyed by article id)
 │   └── current.json            # Cached active edition data
 ├── design_ref/                 # Design mockup images and reference layouts
 ├── src/
@@ -59,8 +60,8 @@ graph TD
 * **Runtime & Library**: [React](https://react.dev/) `19.2.4` & [React DOM](https://react.dev/) `19.2.4`.
 * **Styling**: [Tailwind CSS](https://tailwindcss.com/) `v4` with `@tailwindcss/postcss` for theme declarations.
 * **Icons**: [Lucide React](https://lucide.dev/) `^1.23.0`.
+* **LLM**: [groq-sdk](https://console.groq.com/) `^1.3.0` — powers the 100-word article briefs in [summarize.ts](file:///Users/yusufamin/TheChronicle/src/lib/summarize.ts) when `GROQ_API_KEY` is set; extractive fallback otherwise.
 * **Unused/Available SDKs**:
-  * `groq-sdk` `^1.3.0` (installed, available for LLM features but not active).
   * `recharts` `^3.9.1` (installed, available for charts but not active).
 
 ---
@@ -82,12 +83,13 @@ src/app/page.tsx (Front Page)
            ├── src/lib/rss.ts (XML RSS string parser)
            └── src/lib/classify.ts (Rule-based classifier)
 
-src/app/article/[id]/page.tsx (Article View)
+src/app/article/[id]/page.tsx (Article View — renders "The Brief", max 100 words)
  ├── src/components/ScrollProgress.tsx (Client-side scroll progress bar)
  ├── src/components/Ticker.tsx
  ├── src/components/Masthead.tsx
  ├── src/lib/store.ts → getArticleById()
- └── src/lib/scrape.ts (Article content scraper)
+ ├── src/lib/scrape.ts (Article content scraper + boilerplate/ad filter)
+ └── src/lib/summarize.ts (condenseArticle: Groq LLM or extractive, 100-word cap, disk cache)
 ```
 
 ---
@@ -215,7 +217,7 @@ To keep the application fast and avoid heavy parsing dependencies, [rss.ts](file
 
 ### B. Topic Classification & Quality Filtering
 The logic in [classify.ts](file:///Users/yusufamin/TheChronicle/src/lib/classify.ts) acts as the editorial gate:
-1. **Noise Filtering**: Automatically drops articles containing astrology, horoscope, cricket/sports, movie reviews, trading recommendations ("stocks to buy today"), and general "how to" guides.
+1. **Noise Filtering**: Automatically drops articles containing astrology, horoscope, cricket/sports, movie reviews, trading recommendations ("stocks to buy today"), general "how to" guides, and motivational/filler features ("Quote of the Day", "Psychology explains…", optical illusions, brain teasers, personality tests, "net worth of", zodiac, "top N richest" listicles). It also drops **advisory/evergreen listicles** that masquerade as finance news but carry no event: "best … funds/stocks/SIP to invest", "top N midcap stocks/mutual funds" (word allowed between the number and the noun), "MF Tracker"/"Know Your Fund Manager"/"NFO Alert" promos, "Are you 35 or older? …" advice pieces, "… deserves a place in your portfolio", and "bank holiday today?"/"are banks open" evergreens. The same `isNoise()` gate re-screens carried-over articles during archive merges in [store.ts](file:///Users/yusufamin/TheChronicle/src/lib/store.ts), so newly added patterns also purge junk already on disk.
 2. **Keyword Scoring**: Evaluates the text against regular expression rules:
    * **Strong signal** (+3 points): Decisive topic match (e.g., `DRHP` or `grey market premium` matches IPOs).
    * **Weak signal** (+1 point): Contextual match (e.g., `retail portion` matches IPOs).
@@ -223,14 +225,36 @@ The logic in [classify.ts](file:///Users/yusufamin/TheChronicle/src/lib/classify
 3. **Threshold Gate**: If the best category's score is less than `2`, the article is discarded.
 4. **Substantive Quality Assessment**: Adds 1 point per match for quantitative/institutional keywords (currency/cr figures, regulator names like SEBI/RBI, quarterly indicator words).
 
-### C. De-duplication and Scoring
+### C. Article Scraping & 100-Word Condensation (`/article/[id]`)
+The article page never shows the publisher page as-is (no ads, no link farms):
+1. [scrape.ts](file:///Users/yusufamin/TheChronicle/src/lib/scrape.ts) fetches the source HTML, strips `script/style/nav/aside/form/figure/figcaption`, prefers the `<article>` container, extracts `<p>` blocks, and rejects paragraphs matching the `BOILERPLATE` regex (also-read links, app promos, `subscribe`/newsletter/WhatsApp/Telegram plugs, disclaimers, "Catch all the…" tails, cookie/ToS text — word-boundary safe so `\bsubscribe\b` never hits "subscribed" in IPO coverage). Photo/image-credit fragments riding inside body paragraphs are stripped.
+2. [summarize.ts](file:///Users/yusufamin/TheChronicle/src/lib/summarize.ts) `condenseArticle()` produces "The Brief": **at most 100 words**, preserving key facts (who/what/figures/dates/regulators/quotes). Groq LLM when `GROQ_API_KEY` is set; otherwise extractive (leading sentences — news follows the inverted pyramid). `capAtWordLimit()` cuts at sentence boundaries using a decimal-safe splitter (`(?<=[.!?]["'’”]?)\s+(?=[A-Z“"'‘₹$])`, so "10.5%" never splits).
+3. Results cached in `data/summaries.json` (atomic write, 2000-entry cap, in-memory layer) — each article is condensed exactly once. Page renders the brief with an attribution note and a "View Source" link to the original.
+
+### D. De-duplication and Scoring
 To prevent news duplication on the front page, [news.ts](file:///Users/yusufamin/TheChronicle/src/lib/news.ts) performs:
 * **Link De-duplication**: Filters out duplicate links after stripping query params.
-* **Headline Similarity Check**: Generates a signature key (`titleKey`) from the headline by converting to lowercase, removing non-alphanumeric chars, filtering out words with length ≤ 3, sorting the words alphabetically, and taking the first 8 words. Duplicate signatures are discarded.
+* **Similarity-Based Headline De-duplication**: The same event is reported by ET, Mint and BusinessLine with different figures and verbs ("rises 22.5% to ₹5,480" vs "climbs 26% to Rs 4,123"), so an exact-signature key never matched and the paper showed the story 2–3 times. The engine now compares each incoming headline against every already-accepted one via `isDuplicate()`, using several token sets built by `buildSig()`:
+   * `all` — all significant tokens (length ≥ 3, not a number, not a grammatical `STOPWORD`).
+   * `body` — `all` minus the `GENERIC` finance vocabulary (bank/profit/results/crore/YoY/operating/…). This is the *distinctive* content.
+   * `key` — the **leading entity**: the opening run of capitalised name words (`leadEntity()`), stopping at the first lowercase word or number (usually "Q1"/"results"). Headlines lead with their subject, so this isolates *who* the story is about and ignores trailing verbs/metrics ("margins expand", "operating profit") that would otherwise make two reports of the same result look different.
+   * `lit` / `der` — acronyms written literally (e.g. `PNB`) vs. implied by a run of ≥3 capitalised words (`Punjab National Bank` → `pnb`).
+   * `earn` — whether the headline is a quarterly-results story (`isEarnings()`).
+
+   Two stories are duplicates when **any** of these hold (`jaccard()` = intersection/union):
+   1. **Subject + content**: `jaccard(key) ≥ 0.6` **and** `jaccard(all) ≥ 0.4`.
+   2. **Same earnings event**: `jaccard(key) ≥ 0.6`, both are earnings stories, and `jaccard(all) ≥ 0.25` — a firm reports a given quarter once, so differing phrasing across sources is one event (e.g. BusinessLine's "as lower provisions boost earnings" vs ET's "jumps 23% YoY to ₹7,114 crore").
+   3. **Acronym bridge**: one headline abbreviates an organisation the other spells out (`sharesAcronym()`) **and** `jaccard(all) ≥ 0.3` (PNB vs Punjab National Bank).
+   4. **Distinctive-content overlap**: `jaccard(body) ≥ 0.6` — near-identical wording once boilerplate is stripped; catches re-framings the subject axis misses (parent vs subsidiary/deal, e.g. "JSW One Platforms IPO…" vs "JSW Steel to raise ₹811 crore through JSW One IPO"). Using `body` (not `all`) keeps *different* banks' results apart, since their overlap is entirely generic earnings template.
+
+   Two-word entities protect against subsidiary false-merges: "HDFC Bank" `{hdfc}` vs "HDFC Life" `{hdfc, life}` scores `jaccard(key) = 0.5 < 0.6`, and "Bajaj Finance" vs "Bajaj Finserv" scores `0.33`, so they are correctly kept distinct.
 * **Recency Bonus**: Adds a score bump to keep coverage fresh:
    * Age < 3 hours: +2 points.
    * Age < 8 hours: +1 point.
-* **Sorting & Capping**: Within each topic, articles are sorted by `score` descending, then `publishedAt` descending, and capped at `PER_TOPIC_LIMIT` (14 articles).
+* **Sorting & Diversity Capping**: Within each topic, articles are sorted by `score` descending then `publishedAt` descending, then passed through `diversify()` before the `PER_TOPIC_LIMIT` (14) cut. During earnings season a finance feed is otherwise a wall of bank Q1 results; `diversify()` admits stories greedily by score while enforcing:
+   * `ENTITY_CAP = 2` — at most two stories about the same company (keyed by `entityKey()`, which also acronym-normalises so "PNB" and "Punjab National Bank" count as one company).
+   * `EARNINGS_CAP = 5` — at most five quarterly-results stories per section, so RBI/UPI/insurance/credit-growth items are not crowded out.
+   Two fill passes then run — first relaxing the earnings cap, then all caps — so a section is never left short of `PER_TOPIC_LIMIT`.
 
 ---
 
@@ -246,8 +270,7 @@ To prevent news duplication on the front page, [news.ts](file:///Users/yusufamin
 ---
 
 ## 12. Environment Variables
-No custom environment variables are currently utilized by the core scraper or store logic. 
-* *Note*: If `groq-sdk` is configured, it will require `GROQ_API_KEY` (reads from `process.env['GROQ_API_KEY']`).
+* **`GROQ_API_KEY`** (optional, read in [summarize.ts](file:///Users/yusufamin/TheChronicle/src/lib/summarize.ts)): enables abstractive 100-word article briefs via Groq (`llama-3.3-70b-versatile`, temperature 0.2, 25s timeout, 1 retry). Put it in `.env.local`. Without it, the summarizer silently falls back to extractive mode (leading sentences of the scraped article, sentence-boundary cut). The engine used is recorded per entry in `data/summaries.json` (`"groq"` / `"extractive"`), so briefs can be regenerated by deleting that file after adding a key.
 
 ---
 
@@ -338,7 +361,7 @@ const TTL_MS = 5 * 60 * 1000;
 ## 19. External Integrations
 * **RSS Publishers**: Indian business news outlets configured in [feeds.ts](file:///Users/yusufamin/TheChronicle/src/lib/feeds.ts):
   * *Economic Times* (Markets, Finance, Banking, Economy, IPOs, World News, Tech, Energy, Auto, Healthcare/Biotech, Consumer)
-  * *Livemint* (Markets, Economy, Companies, Money)
+  * *Livemint* (Markets, Economy, Companies, Money, Insurance)
   * *Moneycontrol* (Business, IPOs, Market Reports, Economy)
   * *The Hindu / BusinessLine* (Markets, Banking, Economy, IT)
   * *Times of India* (Business)
@@ -412,13 +435,13 @@ const TTL_MS = 5 * 60 * 1000;
                                    (Topic assigned, base score computed)
                                          │
                                          ▼
-                               [titleKey Similarity] ──> Discard Similar Headlines
+                        [Similarity Dedup: subject/content/acronym] ──> Discard Duplicate Events
                                          │
                                          ▼
                                  [Recency Bonus]
                                          │
                                          ▼
-                               [Sort & Limit per Topic]
+                          [Sort → Diversify (entity/earnings caps) → Limit per Topic]
                                          │
                                          ▼
 [Yahoo Finance Quotes] ──> [Merge & Write to data/current.json]

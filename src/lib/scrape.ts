@@ -56,6 +56,8 @@ function extractParagraphs(html: string): string[] {
     .replace(/<nav[\s\S]*?<\/nav>/gi, "")
     .replace(/<aside[\s\S]*?<\/aside>/gi, "")
     .replace(/<form[\s\S]*?<\/form>/gi, "")
+    .replace(/<figure[\s\S]*?<\/figure>/gi, "")
+    .replace(/<figcaption[\s\S]*?<\/figcaption>/gi, "")
     .replace(/<!--[\s\S]*?-->/g, "");
 
   // Try to isolate <article> content first
@@ -71,17 +73,31 @@ function extractParagraphs(html: string): string[] {
   const paragraphs: string[] = [];
 
   for (const m of pMatches) {
-    const text = stripHtml(m[0]).trim();
+    // Strip photo/image credit fragments that ride along inside body <p>s
+    const text = stripHtml(m[0])
+      .replace(/\s*\|?\s*(photo|image|file (photo|image)) credit:.*$/i, "")
+      .replace(/\s*\|\s*representational (photo|image).*$/i, "")
+      .trim();
     // Filter out very short strings (navigation, labels, etc.)
     if (text.length < 40) continue;
     // Filter out obvious non-content
     if (/^(share|subscribe|sign up|log in|copyright|follow us|also read|read also|related|recommended|trending|popular|advertisement)/i.test(text))
       continue;
+    // Publisher boilerplate, promos and ad copy anywhere in the paragraph
+    if (BOILERPLATE.test(text)) continue;
     paragraphs.push(text);
   }
 
   return paragraphs;
 }
+
+/**
+ * Promo/ad/boilerplate fragments that appear inside otherwise valid <p>
+ * blocks on Indian news sites (word-boundary safe: `\bsubscribe\b` does
+ * not match "subscribed" in IPO coverage).
+ */
+const BOILERPLATE =
+  /\b(also read|read more:|click here|download (the )?([\w ]{0,20})?app|\bsubscribe\b|newsletter|whatsapp channel|telegram channel|follow us|all rights reserved|disclaimer:?|views expressed|catch all the|log ?in to|sign ?in to|premium stor(y|ies)|recommended stories|top trending|stock radar|advertisement|sponsored|affiliate|unlock (a world|premium)|limited(-| )time offer|special offer|epaper|e-paper|live blog|liveblog|breaking news alerts|push notifications|please enable javascript|your browser|cookies? polic\w+|terms of (use|service)|privacy policy)\b/i;
 
 /**
  * Extract image caption from the page (figcaption near the hero image).

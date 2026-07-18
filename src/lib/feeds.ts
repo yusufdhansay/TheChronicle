@@ -67,6 +67,12 @@ export const NEWS_FEEDS: FeedDef[] = [
     source: "Mint",
     topicHint: "finance-banking",
   },
+  {
+    // Insurance / IRDAI coverage — diversifies finance beyond retail bank results.
+    url: "https://www.livemint.com/rss/insurance",
+    source: "Mint",
+    topicHint: "finance-banking",
+  },
 
   // ── Moneycontrol ──────────────────────────────────────────────────
   {

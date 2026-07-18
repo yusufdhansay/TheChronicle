@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { getArticleById } from "@/lib/store";
 import { TOPIC_LABELS } from "@/lib/types";
 import { scrapeArticle } from "@/lib/scrape";
+import { condenseArticle } from "@/lib/summarize";
 import ScrollProgress from "@/components/ScrollProgress";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,8 @@ export default async function ArticlePage({
   if (!article) notFound();
 
   const scraped = await scrapeArticle(article.link);
-  const hasBody = scraped && scraped.paragraphs.length > 0;
+  const brief = await condenseArticle(article, scraped?.paragraphs ?? []);
+  const hasBody = brief.paragraphs.length > 0;
 
   const publishedDate = new Date(article.publishedAt).toLocaleDateString(
     "en-IN",
@@ -96,54 +98,40 @@ export default async function ArticlePage({
             </figure>
           )}
 
-          {/* ── Body Text ── */}
-          <section className="mx-auto max-w-[680px] space-y-8 font-serif text-xl leading-8">
-            {hasBody ? (
-              scraped.paragraphs.map((p, i) => {
-                // First paragraph gets the large drop cap
-                if (i === 0) {
-                  const firstLetter = p.charAt(0);
-                  const rest = p.slice(1);
-                  return (
+          {/* ── The Brief: article condensed to at most 100 words ── */}
+          <section className="mx-auto w-full max-w-[680px]">
+            <div className="mb-8 flex items-center justify-between border-b border-primary pb-2">
+              <p className="label-caps">The Brief</p>
+              <p className="label-caps text-on-surface-variant">
+                Condensed to 100 words
+              </p>
+            </div>
+            <div className="space-y-8 font-serif text-xl leading-9">
+              {hasBody ? (
+                brief.paragraphs.map((p, i) =>
+                  i === 0 ? (
                     <p key={i}>
-                      <span className="article-drop-cap">{firstLetter}</span>
-                      {rest}
+                      <span className="article-drop-cap">{p.charAt(0)}</span>
+                      {p.slice(1)}
                     </p>
-                  );
-                }
-
-                // Insert a divider before the last paragraph when we have
-                // enough content, matching the design reference
-                if (
-                  i === scraped.paragraphs.length - 1 &&
-                  scraped.paragraphs.length > 3
-                ) {
-                  return (
-                    <div key={i}>
-                      <div className="my-12 h-px w-full bg-primary/10" />
-                      <p>{p}</p>
-                    </div>
-                  );
-                }
-
-                return <p key={i}>{p}</p>;
-              })
-            ) : (
-              /* Fallback when scraping fails */
-              <div className="space-y-8">
-                <p>{article.summary}</p>
-                <div className="border-l-4 border-secondary py-8 pl-8">
-                  <p className="font-display text-[28px] leading-[34px] font-semibold italic">
-                    Full article content is available at the source.
-                  </p>
-                </div>
+                  ) : (
+                    <p key={i}>{p}</p>
+                  ),
+                )
+              ) : (
+                /* Only reachable if both scraping and the RSS summary are empty */
                 <p className="text-on-surface-variant">
-                  We couldn&apos;t load the full article content from{" "}
-                  {article.source}. Click &ldquo;View Source&rdquo; below to
-                  read the complete story on their website.
+                  We couldn&apos;t load this article&apos;s content from{" "}
+                  {article.source}. Use &ldquo;View Source&rdquo; below for
+                  the complete story.
                 </p>
-              </div>
-            )}
+              )}
+            </div>
+            <p className="mt-10 border-l-2 border-secondary pl-4 font-serif text-sm italic text-on-surface-variant">
+              This brief was condensed by The Chronicle from the original
+              reporting by {article.source}. For the complete story, read it
+              at the source.
+            </p>
           </section>
 
           {/* ── Bottom Actions ── */}

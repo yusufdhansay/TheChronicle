@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { buildEdition, istDate } from "./news";
+import { isNoise } from "./classify";
 import type { Article, Edition } from "./types";
 
 /**
@@ -40,9 +41,12 @@ async function archive(edition: Edition): Promise<void> {
   const file = path.join(ARCHIVE_DIR, `${edition.date}.json`);
   const existing = await readJson<Edition>(file);
   if (existing) {
-    // Merge: keep previously archived articles that dropped out of feeds
+    // Merge: keep previously archived articles that dropped out of feeds,
+    // re-screening them so items later added to the noise list are purged
     const ids = new Set(edition.articles.map((a) => a.id));
-    const carried = existing.articles.filter((a) => !ids.has(a.id));
+    const carried = existing.articles.filter(
+      (a) => !ids.has(a.id) && !isNoise(`${a.title}. ${a.summary}`),
+    );
     edition = { ...edition, articles: [...edition.articles, ...carried] };
   }
   await writeJson(file, edition);
