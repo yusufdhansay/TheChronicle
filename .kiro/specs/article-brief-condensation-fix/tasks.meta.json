@@ -1,0 +1,73 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Filter player/audio/promo widgets in the scraper": [
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374389038
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374401693
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374476487
+      }
+    ],
+    "2. Enforce 60–100 word briefs, source selection, validation, and self-healing cache in the summarizer": [
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374389070
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374481699
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374579946
+      }
+    ],
+    "3. Update the article page layout and brief label": [
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374389097
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374585484
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374635564
+      }
+    ],
+    "4. Verify build and behavior": [
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374389141
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374640918
+      },
+      {
+        "executionId": "da30dcda-546a-4812-8ef5-15d551a0f9c8",
+        "chatSessionId": "sess_1490671a-a3b4-46cf-b07b-b53cd8c6d45f",
+        "timestamp": 1784374787351
+      }
+    ]
+  }
+}

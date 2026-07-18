@@ -58,7 +58,7 @@ export default async function ArticlePage({
               {article.title}
             </h1>
 
-            <p className="mt-6 font-serif text-xl leading-8 italic text-on-surface-variant">
+            <p className="mt-6 font-serif text-xl leading-8 italic text-on-surface-variant line-clamp-2">
               {article.summary}
             </p>
 
@@ -103,7 +103,7 @@ export default async function ArticlePage({
             <div className="mb-8 flex items-center justify-between border-b border-primary pb-2">
               <p className="label-caps">The Brief</p>
               <p className="label-caps text-on-surface-variant">
-                Condensed to 100 words
+                Condensed to 60–100 words
               </p>
             </div>
             <div className="space-y-8 font-serif text-xl leading-9">

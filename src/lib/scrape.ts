@@ -41,15 +41,38 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+/** Leading labels that indicate navigation/promo rather than article prose. */
+const NON_CONTENT_PREFIX =
+  /^(share|subscribe|sign up|log in|copyright|follow us|also read|read also|related|recommended|trending|popular|advertisement)/i;
+
+/**
+ * Clean one raw HTML fragment into article text, or return null if it is too
+ * short or matches a non-content / boilerplate / widget / promo pattern.
+ */
+function cleanParagraph(rawHtml: string): string | null {
+  const text = stripHtml(rawHtml)
+    .replace(/\s*\|?\s*(photo|image|file (photo|image)) credit:.*$/i, "")
+    .replace(/\s*\|\s*representational (photo|image).*$/i, "")
+    .trim();
+  if (text.length < 40) return null;
+  if (NON_CONTENT_PREFIX.test(text)) return null;
+  if (isNoiseText(text)) return null;
+  return text;
+}
+
 /**
  * Extract the main article body from raw HTML.
  *
- * Strategy: look for `<article>` or well-known content containers
- * first, then fall back to the largest block of `<p>` tags.
+ * Strategy:
+ *  1. Times Internet sites (Economic Times, Times of India) put the body in a
+ *     `<div class="artText">` using `<br><br>` breaks and no `<p>` tags — read
+ *     that container first, splitting on `<br>` runs.
+ *  2. Otherwise isolate `<article>` and collect `<p>` blocks (Mint, BusinessLine,
+ *     The Hindu, etc.).
  */
 function extractParagraphs(html: string): string[] {
-  // Remove scripts, styles, noscript, nav, header, footer, aside, form
-  let cleaned = html
+  // Remove scripts, styles, noscript, nav, aside, form, figures, comments
+  const cleaned = html
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
@@ -60,34 +83,29 @@ function extractParagraphs(html: string): string[] {
     .replace(/<figcaption[\s\S]*?<\/figcaption>/gi, "")
     .replace(/<!--[\s\S]*?-->/g, "");
 
-  // Try to isolate <article> content first
-  const articleMatch = cleaned.match(
-    /<article[\s>][\s\S]*?<\/article>/i,
+  // 1) Times Internet body container (<div class="…artText…"> with <br> breaks)
+  const artText = cleaned.match(
+    /<div[^>]*class="[^"]*\bartText\b[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
   );
-  if (articleMatch) {
-    cleaned = articleMatch[0];
+  if (artText) {
+    const fromArt = artText[1]
+      .split(/(?:<br\s*\/?>\s*)+/i)
+      .map(cleanParagraph)
+      .filter((t): t is string => t !== null);
+    if (fromArt.length > 0) return fromArt;
   }
 
-  // Extract all <p> blocks
-  const pMatches = [...cleaned.matchAll(/<p[\s>][\s\S]*?<\/p>/gi)];
+  // 2) Generic: isolate <article> then collect <p> blocks
+  let scope = cleaned;
+  const articleMatch = scope.match(/<article[\s>][\s\S]*?<\/article>/i);
+  if (articleMatch) scope = articleMatch[0];
+
+  const pMatches = [...scope.matchAll(/<p[\s>][\s\S]*?<\/p>/gi)];
   const paragraphs: string[] = [];
-
   for (const m of pMatches) {
-    // Strip photo/image credit fragments that ride along inside body <p>s
-    const text = stripHtml(m[0])
-      .replace(/\s*\|?\s*(photo|image|file (photo|image)) credit:.*$/i, "")
-      .replace(/\s*\|\s*representational (photo|image).*$/i, "")
-      .trim();
-    // Filter out very short strings (navigation, labels, etc.)
-    if (text.length < 40) continue;
-    // Filter out obvious non-content
-    if (/^(share|subscribe|sign up|log in|copyright|follow us|also read|read also|related|recommended|trending|popular|advertisement)/i.test(text))
-      continue;
-    // Publisher boilerplate, promos and ad copy anywhere in the paragraph
-    if (BOILERPLATE.test(text)) continue;
-    paragraphs.push(text);
+    const text = cleanParagraph(m[0]);
+    if (text) paragraphs.push(text);
   }
-
   return paragraphs;
 }
 
@@ -98,6 +116,31 @@ function extractParagraphs(html: string): string[] {
  */
 const BOILERPLATE =
   /\b(also read|read more:|click here|download (the )?([\w ]{0,20})?app|\bsubscribe\b|newsletter|whatsapp channel|telegram channel|follow us|all rights reserved|disclaimer:?|views expressed|catch all the|log ?in to|sign ?in to|premium stor(y|ies)|recommended stories|top trending|stock radar|advertisement|sponsored|affiliate|unlock (a world|premium)|limited(-| )time offer|special offer|epaper|e-paper|live blog|liveblog|breaking news alerts|push notifications|please enable javascript|your browser|cookies? polic\w+|terms of (use|service)|privacy policy)\b/i;
+
+/**
+ * Player/audio/summarizer widgets and cross-app promos that ride inside
+ * otherwise valid <p> blocks (e.g. the "Listen to this article in
+ * summarized format" audio-player label). These are publisher chrome, not
+ * article content, so they must never enter the brief.
+ */
+const WIDGET_NOISE =
+  /\b(listen to (this )?article|summari[sz]ed format|play audio|audio (summary|version)|text[- ]to[- ]speech|read (this )?(article|story) in (the )?app|open in app|available on (the )?(app store|google play)|download the ([\w ]{0,20})?app)\b/i;
+
+/**
+ * Recommendation/teaser blocks (ET Prime carousel etc.) that are not article
+ * content. Matched anywhere in the text.
+ */
+const PROMO_NOISE =
+  /\b(et prime|stories you might (like|be interested)|recommended for you|more from (the )?section|trending stories|popular (in|categories))\b/i;
+
+/**
+ * True when the text matches a recognized publisher boilerplate/promo or a
+ * media/player/cross-app widget pattern. Exported as the single source of
+ * truth so other modules (the summarizer) apply the exact same judgement.
+ */
+export function isNoiseText(text: string): boolean {
+  return BOILERPLATE.test(text) || WIDGET_NOISE.test(text) || PROMO_NOISE.test(text);
+}
 
 /**
  * Extract image caption from the page (figcaption near the hero image).
