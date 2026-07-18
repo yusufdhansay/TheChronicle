@@ -32,7 +32,7 @@ export function LeadStory({ article }: { article: Article }) {
         <p className="label-caps mb-4 text-secondary">
           {TOPIC_LABELS[article.topic]}
         </p>
-        <h1 className="font-display text-4xl leading-tight font-bold lg:text-5xl lg:leading-[1.12]">
+        <h1 className="font-display text-[28px] leading-tight font-bold sm:text-4xl lg:text-5xl lg:leading-[1.12]">
           {article.title}
         </h1>
         <p className="mt-6 border-l-2 border-secondary pl-5 font-serif text-lg leading-8 italic text-on-surface-variant">

@@ -43,7 +43,7 @@ export default async function ArticlePage({
       <Ticker />
       <Masthead active={article.topic} />
 
-      <main className="mx-auto max-w-[800px] px-5 py-16 md:px-0">
+      <main className="mx-auto max-w-[800px] px-5 py-10 md:py-16 lg:px-0">
         <article className="article-fade-in flex flex-col">
           {/* ── Article Header ── */}
           <div className="mb-12">

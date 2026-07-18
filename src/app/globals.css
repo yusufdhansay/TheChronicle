@@ -39,6 +39,9 @@ html {
 body {
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
+  /* Guard against any single wide element (e.g. the nowrap wordmark or the
+     marquee) creating a horizontal scrollbar on small screens. */
+  overflow-x: hidden;
 }
 
 /* Sharp corners everywhere — the design forbids rounding */
@@ -79,6 +82,17 @@ body {
   margin-right: 1rem;
   margin-top: 0.5rem;
   font-weight: 700;
+}
+
+/* Scale the drop cap down on phones so it stays proportional to the
+   smaller body type and never crowds the first line. */
+@media (max-width: 640px) {
+  .article-drop-cap {
+    font-size: 56px;
+    line-height: 44px;
+    margin-right: 0.75rem;
+    margin-top: 0.35rem;
+  }
 }
 
 /* Staggered fade-in for article sections */

@@ -30,8 +30,13 @@ export default async function Masthead({
           </p>
           <Link
             href="/"
-            className="order-1 col-span-2 text-center font-display text-4xl font-black tracking-tight whitespace-nowrap lg:order-2 lg:col-span-1 lg:px-6 lg:text-5xl"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="order-1 col-span-2 text-center font-display font-black tracking-tight whitespace-nowrap lg:order-2 lg:col-span-1 lg:px-6"
+            style={{
+              fontFamily: "var(--font-display)",
+              // Scales with the viewport so the single-line wordmark fits the
+              // smallest phones yet caps at the desktop size (text-5xl / 3rem).
+              fontSize: "clamp(1.75rem, 6.5vw, 3rem)",
+            }}
           >
             THE CHRONICLE
           </Link>

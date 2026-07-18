@@ -37,7 +37,7 @@ export default function CalendarPicker({
         {selected ?? "Editions"}
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-64 border border-primary bg-surface p-4">
+        <div className="absolute left-1/2 z-50 mt-2 w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 border border-primary bg-surface p-4 sm:left-auto sm:right-0 sm:translate-x-0">
           <p className="label-caps mb-3 text-on-surface-variant">
             Past Editions
           </p>

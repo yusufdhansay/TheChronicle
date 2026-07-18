@@ -55,7 +55,7 @@ export default async function SectionPage({
             <span className="inline-block h-2.5 w-2.5 bg-secondary" />
             Sector Focus
           </p>
-          <h1 className="mt-3 font-display text-4xl font-bold lg:text-5xl">
+          <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl lg:text-5xl">
             {TOPIC_LABELS[slug]}
           </h1>
           <p className="mt-4 max-w-2xl font-serif text-lg leading-8 text-on-surface-variant">
