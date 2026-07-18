@@ -1,16 +1,16 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
 import { buildEdition, istDate } from "./news";
 import { isNoise } from "./classify";
 import type { Article, Edition } from "./types";
 
 /**
- * Edition store supporting both Vercel KV (Redis) and local file storage.
+ * Edition store supporting both serverless Redis (Upstash / Vercel KV) and local file storage.
  *
- * - Checks `process.env.KV_REST_API_URL` to determine if Vercel KV is configured.
- * - In local development (without KV env variables), it seamlessly falls back
- *   to local file storage in `data/`.
+ * - Checks for environment variables from either Upstash Redis (`UPSTASH_REDIS_REST_URL`)
+ *   or Vercel KV (`KV_REST_API_URL`).
+ * - In local development (without Redis credentials), it falls back to local file storage in `data/`.
  */
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -18,7 +18,17 @@ const ARCHIVE_DIR = path.join(DATA_DIR, "archive");
 const CURRENT = path.join(DATA_DIR, "current.json");
 
 export const REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
-const IS_KV = !!process.env.KV_REST_API_URL;
+
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const IS_REDIS = !!(REDIS_URL && REDIS_TOKEN);
+
+const redis = IS_REDIS
+  ? new Redis({
+      url: REDIS_URL!,
+      token: REDIS_TOKEN!,
+    })
+  : null;
 
 let inflight: Promise<Edition> | null = null;
 
@@ -38,9 +48,9 @@ async function writeJson(file: string, value: unknown): Promise<void> {
 }
 
 async function archive(edition: Edition): Promise<void> {
-  if (IS_KV) {
+  if (IS_REDIS && redis) {
     const key = `edition:archive:${edition.date}`;
-    let existing = await kv.get<Edition>(key);
+    let existing = await redis.get<Edition>(key);
     if (existing) {
       const ids = new Set(edition.articles.map((a) => a.id));
       const carried = existing.articles.filter(
@@ -48,8 +58,8 @@ async function archive(edition: Edition): Promise<void> {
       );
       edition = { ...edition, articles: [...edition.articles, ...carried] };
     }
-    await kv.set(key, edition);
-    await kv.sadd("edition:archive_dates", edition.date);
+    await redis.set(key, edition);
+    await redis.sadd("edition:archive_dates", edition.date);
   } else {
     const file = path.join(ARCHIVE_DIR, `${edition.date}.json`);
     const existing = await readJson<Edition>(file);
@@ -70,8 +80,8 @@ export async function refreshEdition(): Promise<Edition> {
       try {
         const edition = await buildEdition();
         if (edition.articles.length > 0) {
-          if (IS_KV) {
-            await kv.set("edition:current", edition);
+          if (IS_REDIS && redis) {
+            await redis.set("edition:current", edition);
             await archive(edition);
           } else {
             await writeJson(CURRENT, edition);
@@ -89,8 +99,8 @@ export async function refreshEdition(): Promise<Edition> {
 
 /** Returns the current edition, refreshing if missing or older than 12 h. */
 export async function getEdition(): Promise<Edition> {
-  if (IS_KV) {
-    const cached = await kv.get<Edition>("edition:current");
+  if (IS_REDIS && redis) {
+    const cached = await redis.get<Edition>("edition:current");
     if (cached) {
       const age = Date.now() - +new Date(cached.fetchedAt);
       if (age < REFRESH_INTERVAL_MS) return cached;
@@ -124,8 +134,8 @@ export async function getArchivedEdition(date: string): Promise<Edition | null> 
     const current = await getEdition();
     if (current.date === date) return current;
   }
-  if (IS_KV) {
-    return await kv.get<Edition>(`edition:archive:${date}`);
+  if (IS_REDIS && redis) {
+    return await redis.get<Edition>(`edition:archive:${date}`);
   } else {
     return readJson<Edition>(path.join(ARCHIVE_DIR, `${date}.json`));
   }
@@ -135,13 +145,13 @@ export async function getArchivedEdition(date: string): Promise<Edition | null> 
 export async function getArticleById(
   id: string,
 ): Promise<Article | null> {
-  if (IS_KV) {
-    const current = await kv.get<Edition>("edition:current");
+  if (IS_REDIS && redis) {
+    const current = await redis.get<Edition>("edition:current");
     if (current) {
       const found = current.articles.find((a) => a.id === id);
       if (found) return found;
     }
-    const today = await kv.get<Edition>(`edition:archive:${istDate()}`);
+    const today = await redis.get<Edition>(`edition:archive:${istDate()}`);
     if (today) {
       const found = today.articles.find((a) => a.id === id);
       if (found) return found;
@@ -163,10 +173,12 @@ export async function getArticleById(
 }
 
 export async function listArchiveDates(): Promise<string[]> {
-  if (IS_KV) {
+  if (IS_REDIS && redis) {
     try {
-      const dates = await kv.smembers("edition:archive_dates");
-      return dates.sort().reverse();
+      const dates = await redis.smembers("edition:archive_dates");
+      // filter out potential nulls or non-string elements safely
+      const cleanDates = dates.filter((d): d is string => typeof d === "string");
+      return cleanDates.sort().reverse();
     } catch {
       return [];
     }
