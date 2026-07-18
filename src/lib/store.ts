@@ -1,17 +1,16 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { kv } from "@vercel/kv";
 import { buildEdition, istDate } from "./news";
 import { isNoise } from "./classify";
 import type { Article, Edition } from "./types";
 
 /**
- * File-backed edition store.
+ * Edition store supporting both Vercel KV (Redis) and local file storage.
  *
- * - `data/current.json` — the live edition, refreshed when older than 12 h
- *   (or on demand via the Refresh Now button).
- * - `data/archive/YYYY-MM-DD.json` — a snapshot per IST day, powering the
- *   calendar view. The latest refresh of a given day wins, with articles
- *   merged so earlier stories aren't lost.
+ * - Checks `process.env.KV_REST_API_URL` to determine if Vercel KV is configured.
+ * - In local development (without KV env variables), it seamlessly falls back
+ *   to local file storage in `data/`.
  */
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -19,6 +18,7 @@ const ARCHIVE_DIR = path.join(DATA_DIR, "archive");
 const CURRENT = path.join(DATA_DIR, "current.json");
 
 export const REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const IS_KV = !!process.env.KV_REST_API_URL;
 
 let inflight: Promise<Edition> | null = null;
 
@@ -38,18 +38,30 @@ async function writeJson(file: string, value: unknown): Promise<void> {
 }
 
 async function archive(edition: Edition): Promise<void> {
-  const file = path.join(ARCHIVE_DIR, `${edition.date}.json`);
-  const existing = await readJson<Edition>(file);
-  if (existing) {
-    // Merge: keep previously archived articles that dropped out of feeds,
-    // re-screening them so items later added to the noise list are purged
-    const ids = new Set(edition.articles.map((a) => a.id));
-    const carried = existing.articles.filter(
-      (a) => !ids.has(a.id) && !isNoise(`${a.title}. ${a.summary}`),
-    );
-    edition = { ...edition, articles: [...edition.articles, ...carried] };
+  if (IS_KV) {
+    const key = `edition:archive:${edition.date}`;
+    let existing = await kv.get<Edition>(key);
+    if (existing) {
+      const ids = new Set(edition.articles.map((a) => a.id));
+      const carried = existing.articles.filter(
+        (a) => !ids.has(a.id) && !isNoise(`${a.title}. ${a.summary}`),
+      );
+      edition = { ...edition, articles: [...edition.articles, ...carried] };
+    }
+    await kv.set(key, edition);
+    await kv.sadd("edition:archive_dates", edition.date);
+  } else {
+    const file = path.join(ARCHIVE_DIR, `${edition.date}.json`);
+    const existing = await readJson<Edition>(file);
+    if (existing) {
+      const ids = new Set(edition.articles.map((a) => a.id));
+      const carried = existing.articles.filter(
+        (a) => !ids.has(a.id) && !isNoise(`${a.title}. ${a.summary}`),
+      );
+      edition = { ...edition, articles: [...edition.articles, ...carried] };
+    }
+    await writeJson(file, edition);
   }
-  await writeJson(file, edition);
 }
 
 export async function refreshEdition(): Promise<Edition> {
@@ -57,10 +69,14 @@ export async function refreshEdition(): Promise<Edition> {
     inflight = (async () => {
       try {
         const edition = await buildEdition();
-        // Never clobber a good edition with an empty fetch (network blip)
         if (edition.articles.length > 0) {
-          await writeJson(CURRENT, edition);
-          await archive(edition);
+          if (IS_KV) {
+            await kv.set("edition:current", edition);
+            await archive(edition);
+          } else {
+            await writeJson(CURRENT, edition);
+            await archive(edition);
+          }
         }
         return edition;
       } finally {
@@ -73,60 +89,97 @@ export async function refreshEdition(): Promise<Edition> {
 
 /** Returns the current edition, refreshing if missing or older than 12 h. */
 export async function getEdition(): Promise<Edition> {
-  const cached = await readJson<Edition>(CURRENT);
-  if (cached) {
-    const age = Date.now() - +new Date(cached.fetchedAt);
-    if (age < REFRESH_INTERVAL_MS) return cached;
-    // Stale: refresh, but fall back to the cached copy on failure
-    try {
-      const fresh = await refreshEdition();
-      return fresh.articles.length > 0 ? fresh : cached;
-    } catch {
-      return cached;
+  if (IS_KV) {
+    const cached = await kv.get<Edition>("edition:current");
+    if (cached) {
+      const age = Date.now() - +new Date(cached.fetchedAt);
+      if (age < REFRESH_INTERVAL_MS) return cached;
+      try {
+        const fresh = await refreshEdition();
+        return fresh.articles.length > 0 ? fresh : cached;
+      } catch {
+        return cached;
+      }
     }
+    return refreshEdition();
+  } else {
+    const cached = await readJson<Edition>(CURRENT);
+    if (cached) {
+      const age = Date.now() - +new Date(cached.fetchedAt);
+      if (age < REFRESH_INTERVAL_MS) return cached;
+      try {
+        const fresh = await refreshEdition();
+        return fresh.articles.length > 0 ? fresh : cached;
+      } catch {
+        return cached;
+      }
+    }
+    return refreshEdition();
   }
-  return refreshEdition();
 }
 
 export async function getArchivedEdition(date: string): Promise<Edition | null> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   if (date === istDate()) {
-    // Today: prefer the live edition
     const current = await getEdition();
     if (current.date === date) return current;
   }
-  return readJson<Edition>(path.join(ARCHIVE_DIR, `${date}.json`));
+  if (IS_KV) {
+    return await kv.get<Edition>(`edition:archive:${date}`);
+  } else {
+    return readJson<Edition>(path.join(ARCHIVE_DIR, `${date}.json`));
+  }
 }
 
 /** Look up a single article by its 12-char hash id. */
 export async function getArticleById(
   id: string,
 ): Promise<Article | null> {
-  // Search the live edition first
-  const current = await readJson<Edition>(CURRENT);
-  if (current) {
-    const found = current.articles.find((a) => a.id === id);
-    if (found) return found;
-  }
-  // Fall back to today's archive (may contain older merged articles)
-  const todayFile = path.join(ARCHIVE_DIR, `${istDate()}.json`);
-  const today = await readJson<Edition>(todayFile);
-  if (today) {
-    const found = today.articles.find((a) => a.id === id);
-    if (found) return found;
+  if (IS_KV) {
+    const current = await kv.get<Edition>("edition:current");
+    if (current) {
+      const found = current.articles.find((a) => a.id === id);
+      if (found) return found;
+    }
+    const today = await kv.get<Edition>(`edition:archive:${istDate()}`);
+    if (today) {
+      const found = today.articles.find((a) => a.id === id);
+      if (found) return found;
+    }
+  } else {
+    const current = await readJson<Edition>(CURRENT);
+    if (current) {
+      const found = current.articles.find((a) => a.id === id);
+      if (found) return found;
+    }
+    const todayFile = path.join(ARCHIVE_DIR, `${istDate()}.json`);
+    const today = await readJson<Edition>(todayFile);
+    if (today) {
+      const found = today.articles.find((a) => a.id === id);
+      if (found) return found;
+    }
   }
   return null;
 }
 
 export async function listArchiveDates(): Promise<string[]> {
-  try {
-    const files = await fs.readdir(ARCHIVE_DIR);
-    return files
-      .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
-      .map((f) => f.replace(".json", ""))
-      .sort()
-      .reverse();
-  } catch {
-    return [];
+  if (IS_KV) {
+    try {
+      const dates = await kv.smembers("edition:archive_dates");
+      return dates.sort().reverse();
+    } catch {
+      return [];
+    }
+  } else {
+    try {
+      const files = await fs.readdir(ARCHIVE_DIR);
+      return files
+        .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+        .map((f) => f.replace(".json", ""))
+        .sort()
+        .reverse();
+    } catch {
+      return [];
+    }
   }
 }
